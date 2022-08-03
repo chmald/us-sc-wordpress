@@ -18,8 +18,20 @@
  * @package WordPress
  */
 
+
+ //Using environment variables for memory limits
+$wp_memory_limit = (getenv('WP_MEMORY_LIMIT') && preg_match("/^[0-9]+M$/", getenv('WP_MEMORY_LIMIT'))) ? getenv('WP_MEMORY_LIMIT') : '128M';
+$wp_max_memory_limit = (getenv('WP_MAX_MEMORY_LIMIT') && preg_match("/^[0-9]+M$/", getenv('WP_MAX_MEMORY_LIMIT'))) ? getenv('WP_MAX_MEMORY_LIMIT') : '256M';
+
+/** General WordPress memory limit for PHP scripts*/
+define('WP_MEMORY_LIMIT', $wp_memory_limit );
+
+/** WordPress memory limit for Admin panel scripts */
+define('WP_MAX_MEMORY_LIMIT', $wp_max_memory_limit );
+
 // ** Database settings - You can get this info from your web host ** //
 
+// ** MySQL settings - You can get this info from your web host ** //
 $connectstr_dbhost = getenv('DATABASE_HOST');
 $connectstr_dbname = getenv('DATABASE_NAME');
 $connectstr_dbusername = getenv('DATABASE_USERNAME');;
@@ -43,8 +55,11 @@ define( 'DB_CHARSET', 'utf8' );
 /** The database collate type. Don't change this if in doubt. */
 define( 'DB_COLLATE', '' );
 
-define( 'MYSQL_SSL_CA', getenv('MYSQL_SSL_CA'));
-define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
+/** Enabling support for connecting external MYSQL over SSL*/
+$mysql_sslconnect = (getenv('DB_SSL_CONNECTION')) ? getenv('DB_SSL_CONNECTION') : 'true';
+if (strtolower($mysql_sslconnect) != 'false' && !is_numeric(strpos($connectstr_dbhost, "127.0.0.1")) && !is_numeric(strpos(strtolower($connectstr_dbhost), "localhost"))) {
+	define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
+}
 
 /**#@+
  * Authentication unique keys and salts.
@@ -93,10 +108,19 @@ define( 'WP_DEBUG', false );
 /* Add any custom values between this line and the "stop editing" line. */
 
 //Relative URLs for swapping across app service deployment slots 
-define('WP_HOME', 'http://'. filter_input(INPUT_SERVER, 'HTTP_HOST', FILTER_SANITIZE_STRING));
-define('WP_SITEURL', 'http://'. filter_input(INPUT_SERVER, 'HTTP_HOST', FILTER_SANITIZE_STRING));
+if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
+	$_SERVER['HTTPS'] = 'on';
+
+$http_protocol='http://';
+if (!preg_match("/^localhost(:[0-9])*/", $_SERVER['HTTP_HOST']) && !preg_match("/^127\.0\.0\.1(:[0-9])*/", $_SERVER['HTTP_HOST'])) {
+	$http_protocol='https://';
+}
+
+//Relative URLs for swapping across app service deployment slots
+define('WP_HOME', $http_protocol . $_SERVER['HTTP_HOST']);
+define('WP_SITEURL', $http_protocol . $_SERVER['HTTP_HOST']);
 define('WP_CONTENT_URL', '/wp-content');
-define('DOMAIN_CURRENT_SITE', filter_input(INPUT_SERVER, 'HTTP_HOST', FILTER_SANITIZE_STRING));
+define('DOMAIN_CURRENT_SITE', $_SERVER['HTTP_HOST']);
 
 /* That's all, stop editing! Happy publishing. */
 
