@@ -55,11 +55,8 @@ define( 'DB_CHARSET', 'utf8' );
 /** The database collate type. Don't change this if in doubt. */
 define( 'DB_COLLATE', '' );
 
-/** Enabling support for connecting external MYSQL over SSL*/
-$mysql_sslconnect = (getenv('DB_SSL_CONNECTION')) ? getenv('DB_SSL_CONNECTION') : 'true';
-if (strtolower($mysql_sslconnect) != 'false' && !is_numeric(strpos($connectstr_dbhost, "127.0.0.1")) && !is_numeric(strpos(strtolower($connectstr_dbhost), "localhost"))) {
-	define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
-}
+/** SSL*/
+define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
 
 /**#@+
  * Authentication unique keys and salts.
@@ -106,21 +103,6 @@ $table_prefix = 'wp_';
 define( 'WP_DEBUG', false );
 
 /* Add any custom values between this line and the "stop editing" line. */
-
-//Relative URLs for swapping across app service deployment slots 
-if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
-	$_SERVER['HTTPS'] = 'on';
-
-$http_protocol='http://';
-if (!preg_match("/^localhost(:[0-9])*/", $_SERVER['HTTP_HOST']) && !preg_match("/^127\.0\.0\.1(:[0-9])*/", $_SERVER['HTTP_HOST'])) {
-	$http_protocol='https://';
-}
-
-//Relative URLs for swapping across app service deployment slots
-define('WP_HOME', $http_protocol . $_SERVER['HTTP_HOST']);
-define('WP_SITEURL', $http_protocol . $_SERVER['HTTP_HOST']);
-define('WP_CONTENT_URL', '/wp-content');
-define('DOMAIN_CURRENT_SITE', $_SERVER['HTTP_HOST']);
 
 /* That's all, stop editing! Happy publishing. */
 
